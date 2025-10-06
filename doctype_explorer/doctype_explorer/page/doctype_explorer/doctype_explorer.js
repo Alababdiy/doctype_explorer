@@ -11,22 +11,35 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
     const html = `
     <div class="dt-explorer">
       <div class="form-inline" style="gap: 8px; margin-bottom: 16px;">
-        <input type="text" class="form-control input-sm" id="dt-name" placeholder="Enter DocType name" style="min-width: 280px;" />
+        <div id="dt-name-wrapper" style="min-width: 280px;"></div>
         <button class="btn btn-primary btn-sm" id="btn-generate-json">${__('Generate JSON')}</button>
         <button class="btn btn-default btn-sm" id="btn-copy-json">${__('Copy JSON')}</button>
         <button class="btn btn-default btn-sm" id="btn-export-html">${__('Export HTML')}</button>
       </div>
-      <pre id="json-output" style="white-space: pre-wrap; background:#f8f8f8; padding:12px; border-radius:4px; border:1px solid #ddd; max-height: 50vh; overflow:auto;"></pre>
+      <pre id="json-output" style="white-space: pre-wrap; background: var(--background-color-light); padding:12px; border-radius:4px; border:1px solid var(--border-color); max-height: 50vh; overflow:auto;"></pre>
     </div>
   `;
 
     $container.append(html);
 
-    const $name = $container.find('#dt-name');
+    const $name_wrapper = $container.find('#dt-name-wrapper');
     const $output = $container.find('#json-output');
 
+    let doctype_name_control = frappe.ui.form.make_control({
+        parent: $name_wrapper,
+        df: {
+            fieldtype: 'Link',
+            fieldname: 'doctype_name',
+            options: 'DocType',
+            label: __('DocType Name'),
+            placeholder: __('Enter DocType name')
+        },
+        render_input: true
+    });
+    doctype_name_control.refresh();
+
     function getName() {
-        return ($name.val() || '').trim();
+        return doctype_name_control.get_value() || '';
     }
 
     function notifyError(msg) {
@@ -82,5 +95,3 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
         });
     });
 };
-
-
