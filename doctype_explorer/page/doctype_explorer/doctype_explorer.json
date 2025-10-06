@@ -1,8 +1,9 @@
 {
-    "title": "DocType Explorer",
     "doctype": "Page",
     "name": "doctype_explorer",
+    "title": "DocType Explorer",
     "page_name": "doctype_explorer",
-    "system_page": 0,
-    "module": "Doctype Explorer"
-}
+    "module": "Doctype Explorer",
+    "system_page": 0
+  }
+  
