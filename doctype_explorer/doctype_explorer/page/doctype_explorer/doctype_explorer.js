@@ -9,12 +9,15 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
     $container.empty();
 
     const html = `
-    <div class="dt-explorer">
-      <div class="form-inline" style="gap: 8px; margin-bottom: 16px;">
-        <div id="dt-name-wrapper" style="min-width: 280px;"></div>
-        <button class="btn btn-primary btn-sm" id="btn-generate-json">${__('Generate JSON')}</button>
-        <button class="btn btn-default btn-sm" id="btn-copy-json">${__('Copy JSON')}</button>
-        <button class="btn btn-default btn-sm" id="btn-export-html">${__('Export HTML')}</button>
+    <div class="dt-explorer frappe-card" style="padding:20px;">
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="control-label">${__('DocType Name')}</label>
+        <div id="dt-name-wrapper" style="max-width: 280px;"></div>
+      </div>
+      <div class="form-group">
+        <button class="btn btn-primary" id="btn-generate-json">${__('Generate JSON')}</button>
+        <button class="btn btn-default" id="btn-copy-json">${__('Copy JSON')}</button>
+        <button class="btn btn-default" id="btn-export-html">${__('Export HTML')}</button>
       </div>
       <pre id="json-output" style="white-space: pre-wrap; background: var(--background-color-light); padding:12px; border-radius:4px; border:1px solid var(--border-color); max-height: 50vh; overflow:auto;"></pre>
     </div>
@@ -31,7 +34,6 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
             fieldtype: 'Link',
             fieldname: 'doctype_name',
             options: 'DocType',
-            label: __('DocType Name'),
             placeholder: __('Enter DocType name')
         },
         render_input: true

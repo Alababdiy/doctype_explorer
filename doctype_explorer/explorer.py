@@ -460,6 +460,7 @@ def get_doctype_dependencies(doctype_name, depth=1):
         return {"success": False, "message": str(e)}
 
 
+@frappe.whitelist()
 def export_to_html(doctype_name):
     """
     Export DocType documentation as a formatted HTML file.
@@ -509,7 +510,7 @@ def export_to_html(doctype_name):
                     <th>Field Name</th>
                     <th>Label</th>
                     <th>Type</th>
-                    <th>Options</th>
+                    <th>Linked DocType</th>
                     <th>Required</th>
                 </tr>
     """
@@ -520,12 +521,15 @@ def export_to_html(doctype_name):
             if field["required"]
             else '<span class="badge optional">Optional</span>'
         )
+        linked_doctype_name = (
+            field["options"] if field["fieldtype"] == "Link" and field["options"] else "-"
+        )
         html += f"""
                 <tr>
                     <td>{field['fieldname']}</td>
                     <td>{field['label']}</td>
                     <td>{field['fieldtype']}</td>
-                    <td>{field['options'] or '-'}</td>
+                    <td>{linked_doctype_name}</td>
                     <td>{required_badge}</td>
                 </tr>
         """
@@ -546,5 +550,3 @@ def export_to_html(doctype_name):
         f.write(html)
 
     return output_path
-
-
