@@ -259,7 +259,7 @@ def generate_doctype_json(
 
 
 @frappe.whitelist()
-def generate_doctype_documentation(doctype_name, return_json=False):
+def generate_doctype_documentation(doctype_name, return_json=False, level=0):
     """
     Whitelisted method to generate DocType documentation.
     Can be called from the frontend or bench command.
@@ -267,20 +267,24 @@ def generate_doctype_documentation(doctype_name, return_json=False):
     Args:
         doctype_name (str): Name of the DocType to document
         return_json (bool): If True, return JSON structure instead of saving to file
+        level (int): Maximum recursion depth for nested links (0 for infinite)
 
     Returns:
         dict: Result with file path/data and status
     """
     try:
+        level = frappe.parse_json(level) if isinstance(level, str) else level
+        max_depth = level if level > 0 else float('inf')
+
         if frappe.utils.cstr(return_json).lower() in {"true", "1"}:
-            structure = generate_doctype_json(doctype_name, output_path=False)
+            structure = generate_doctype_json(doctype_name, output_path=False, max_depth=max_depth)
             return {
                 "success": True,
                 "data": structure,
                 "message": f"Documentation generated for {doctype_name}",
             }
         else:
-            _ = generate_doctype_json(doctype_name)
+            _ = generate_doctype_json(doctype_name, max_depth=max_depth)
             site_path = frappe.get_site_path()
             file_path = os.path.join(
                 site_path,

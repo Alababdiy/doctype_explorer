@@ -14,6 +14,10 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
         <label class="control-label">${__('DocType Name')}</label>
         <div id="dt-name-wrapper" style="max-width: 280px;"></div>
       </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="control-label">${__('Level (0 for infinite)')}</label>
+        <div id="dt-level-wrapper" style="max-width: 280px;"></div>
+      </div>
       <div class="form-group">
         <button class="btn btn-primary" id="btn-generate-json">${__('Generate JSON')}</button>
         <button class="btn btn-default" id="btn-copy-json">${__('Copy JSON')}</button>
@@ -26,6 +30,7 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
     $container.append(html);
 
     const $name_wrapper = $container.find('#dt-name-wrapper');
+    const $level_wrapper = $container.find('#dt-level-wrapper');
     const $output = $container.find('#json-output');
 
     let doctype_name_control = frappe.ui.form.make_control({
@@ -40,8 +45,24 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
     });
     doctype_name_control.refresh();
 
+    let level_control = frappe.ui.form.make_control({
+        parent: $level_wrapper,
+        df: {
+            fieldtype: 'Int',
+            fieldname: 'level',
+            default: 0,
+            placeholder: __('Enter level (0 for infinite)')
+        },
+        render_input: true
+    });
+    level_control.refresh();
+
     function getName() {
         return doctype_name_control.get_value() || '';
+    }
+
+    function getLevel() {
+        return level_control.get_value() || 0;
     }
 
     function notifyError(msg) {
@@ -54,10 +75,11 @@ frappe.pages['doctype_explorer'].on_page_load = function(wrapper) {
 
     $container.find('#btn-generate-json').on('click', function() {
         const name = getName();
+        const level = getLevel();
         if (!name) { return notifyError(__('Please enter a DocType name.')); }
         frappe.call({
             method: 'doctype_explorer.explorer.generate_doctype_documentation',
-            args: { doctype_name: name, return_json: true },
+            args: { doctype_name: name, return_json: true, level: level },
             freeze: true,
             callback: (r) => {
                 if (r && r.message && r.message.success) {

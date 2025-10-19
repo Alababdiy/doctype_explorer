@@ -5,7 +5,7 @@ Utilities to explore Frappe DocTypes, generate JSON/HTML documentation, compare 
 ### Install in Bench
 
 ```bash
-bench get-app /Users/abdo/Downloads/doctype-explorer-new
+bench get-app https://github.com/Alababdiy/doctype-explorer.git.
 bench --site your.local install-app doctype_explorer
 bench build && bench restart
 ```
