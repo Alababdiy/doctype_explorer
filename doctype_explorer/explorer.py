@@ -4,6 +4,7 @@ from datetime import datetime
 
 import frappe
 from frappe.model.meta import get_meta
+from werkzeug.wrappers import Response
 
 
 def generate_doctype_json(
@@ -554,3 +555,110 @@ def export_to_html(doctype_name):
         f.write(html)
 
     return output_path
+
+
+@frappe.whitelist(allow_guest=True)
+def get_doctype_api():
+    """
+    API endpoint to get DocType documentation via GET request.
+    Requires AUTH-KEY for authentication.
+    
+    GET Parameters:
+        AUTH-KEY (str, required): Authentication key
+        doctype_name (str, required): Name of the DocType to document
+        level (int, optional): Maximum recursion depth (0 for infinite, default: 0)
+    
+    Headers (alternative):
+        AUTH-KEY: Can be passed in headers instead of GET parameters
+    
+    Returns:
+        dict: JSON response with DocType structure or error message
+    
+    Example:
+        GET /api/method/doctype_explorer.explorer.get_doctype_api?AUTH-KEY=your_key&doctype_name=Sales Order&level=2
+    """
+    # Get AUTH-KEY from GET parameters or headers
+    auth_key = frappe.form_dict.get('AUTH-KEY') or frappe.request.headers.get('AUTH-KEY')
+    
+    if not auth_key:
+        frappe.throw(
+            'AUTH-KEY is required. Please provide AUTH-KEY as GET parameter or in headers.',
+            frappe.AuthenticationError
+        )
+    
+    # Validate AUTH-KEY
+    # Priority: Environment variable > Site config > System Settings custom field
+    valid_auth_key = (
+        os.environ.get('DOCTYPE_EXPLORER_AUTH_KEY') or
+        frappe.conf.get('doctype_explorer_auth_key') or
+        frappe.db.get_value('System Settings', 'System Settings', 'custom_doctype_explorer_auth_key')
+    )
+    
+    # If no auth key is configured, throw error
+    if not valid_auth_key:
+        frappe.throw(
+            'AUTH-KEY validation not configured. Please set doctype_explorer_auth_key in site config, '
+            'environment variable DOCTYPE_EXPLORER_AUTH_KEY, or System Settings custom field.',
+            frappe.AuthenticationError
+        )
+    
+    if auth_key != valid_auth_key:
+        frappe.throw('Invalid AUTH-KEY', frappe.AuthenticationError)
+    
+    # Get required parameters
+    doctype_name = frappe.form_dict.get('doctype_name')
+    if not doctype_name:
+        frappe.throw('doctype_name is required as GET parameter', frappe.ValidationError)
+    
+    # Get optional parameters
+    level = frappe.form_dict.get('level', 0)
+    try:
+        level = int(level) if level else 0
+    except (ValueError, TypeError):
+        level = 0
+    
+    # Generate documentation
+    try:
+        max_depth = level if level > 0 else float('inf')
+        structure = generate_doctype_json(
+            doctype_name,
+            output_path=False,
+            max_depth=max_depth
+        )
+        
+        response_data = {
+            'success': True,
+            'data': structure,
+            'message': f'Documentation generated for {doctype_name}',
+            'doctype_name': doctype_name,
+            'level': level
+        }
+        
+        # Return formatted JSON response
+        formatted_json = json.dumps(response_data, indent=2, ensure_ascii=False, default=str)
+        response = Response(
+            formatted_json,
+            mimetype='application/json',
+            status=200
+        )
+        return response
+        
+    except Exception as e:  # noqa: BLE001
+        frappe.log_error(
+            f"Error in get_doctype_api for {doctype_name}: {str(e)}",
+            "DocType Explorer API Error"
+        )
+        error_data = {
+            'success': False,
+            'message': str(e),
+            'error': 'Failed to generate documentation'
+        }
+        
+        # Return formatted JSON response for errors too
+        formatted_json = json.dumps(error_data, indent=2, ensure_ascii=False, default=str)
+        response = Response(
+            formatted_json,
+            mimetype='application/json',
+            status=500
+        )
+        return response
